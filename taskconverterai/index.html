@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskConverterAI</title>
+    <meta name="description" content="Central access point for TaskConverterAI microservices">
+    <meta name="keywords" content="microservices, api, documentation, openapi, swagger">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header section -->
+    <header class="app-header">
+        <img src="assets/logo.png" alt="TaskConverterAI Logo" class="app-logo">
+        <h1 class="app-title">TaskConverterAI</h1>
+        <p class="app-subtitle">Central access point for microservices</p>
+    </header>
+
+    <!-- Main content area -->
+    <main class="main-content">
+        <!-- Loading state -->
+        <div id="loading-indicator" class="loading-indicator">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Loading services...</p>
+        </div>
+
+        <!-- Error state -->
+        <div id="error-message" class="error-message" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <h2 class="error-title">Error Loading Services</h2>
+            <p id="error-details" class="error-details"></p>
+            <button class="error-retry" onclick="location.reload()">Retry</button>
+        </div>
+
+        <!-- Service cards container -->
+        <div id="service-cards-container" class="service-cards-grid" role="grid" aria-label="Available microservices">
+            <!-- Dynamic service cards inserted here -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>&copy; 2025 TaskConverterAI</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
