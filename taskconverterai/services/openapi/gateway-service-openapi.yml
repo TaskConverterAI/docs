@@ -8,7 +8,7 @@ info:
     email: support@taskconverterai.com
 
 servers:
-  - url: http://localhost:8080/api
+  - url: http://localhost:8084/api
     description: Development gateway server
   - url: https://gateway.taskconverterai.com/api
     description: Production gateway server
@@ -357,7 +357,7 @@ paths:
   /tasks:
     post:
       summary: Create a new task
-      description: Proxies task creation request to task service
+      description: Proxies task creation request to task service. The author ID is automatically extracted from the JWT token.
       tags:
         - Tasks
       security:
@@ -637,7 +637,7 @@ paths:
   /analyzer/audio:
     post:
       summary: Analyze audio file
-      description: Proxies audio file analysis request to analyzer service
+      description: Proxies audio file analysis request to analyzer service. The user ID is automatically extracted from the JWT token and passed as a query parameter.
       tags:
         - Analyzer
       security:
@@ -663,7 +663,7 @@ paths:
   /analyzer/task:
     post:
       summary: Analyze task description
-      description: Proxies task description analysis request to analyzer service
+      description: Proxies task description analysis request to analyzer service. The user ID is automatically extracted from the JWT token and passed as a query parameter.
       tags:
         - Analyzer
       security:
@@ -894,7 +894,6 @@ components:
       type: object
       required:
         - title
-        - authorId
         - geoposition
       properties:
         title:
@@ -909,9 +908,6 @@ components:
         groupId:
           type: string
           description: Optional group identifier (if not provided, task is personal)
-        authorId:
-          type: string
-          description: User ID of task creator
         geoposition:
           $ref: '#/components/schemas/Geoposition'
         initialSubtasks:
