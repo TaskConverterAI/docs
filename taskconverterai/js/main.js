@@ -24,6 +24,16 @@ const serviceConfig = {
             status: "active",
             version: "1.0.0",
             tags: ["auth", "security"]
+        },
+        {
+            id: "task-service",
+            name: "Task Service",
+            description: "Task management with group collaboration, subtasks, geolocation and status tracking",
+            openApiUrl: "services/openapi/task-service-openapi.yml",
+            documentationUrl: "services/task-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["tasks", "collaboration", "geolocation"]
         }
     ]
 };
