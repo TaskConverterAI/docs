@@ -34,6 +34,16 @@ const serviceConfig = {
             status: "active",
             version: "1.0.0",
             tags: ["tasks", "collaboration", "geolocation"]
+        },
+        {
+            id: "analyzer-service",
+            name: "Analyzer Service",
+            description: "Audio file and task description analysis with asynchronous processing",
+            openApiUrl: "services/openapi/analyzer-service-openapi.yml",
+            documentationUrl: "services/analyzer-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["audio", "tasks", "analysis", "async"]
         }
     ]
 };
