@@ -1,20 +1,9 @@
-// Service configuration - Single test service for MVP
+// Service configuration - Production services only
 const serviceConfig = {
     applicationTitle: "TaskConverterAI",
     description: "Central access point for TaskConverterAI microservices",
-    lastUpdated: "2025-10-07T00:00:00Z",
+    lastUpdated: "2025-10-13T00:00:00Z",
     services: [
-        {
-            id: "test-service",
-            name: "Test Service",
-            description: "Example service for demonstrating OpenAPI documentation and TaskConverterAI functionality",
-            openApiUrl: "services/openapi/test-service-openapi.yml",
-            documentationUrl: "services/test-service.html",
-            status: "active",
-            version: "1.0.0",
-            tags: ["demo", "testing", "example"]
-        }
-        ,
         {
             id: "auth-service",
             name: "Auth Service",
