@@ -1,0 +1,1055 @@
+openapi: 3.0.3
+info:
+  title: Gateway Service API
+  description: Main entrance for TaskConverterAI microservices - unified access to auth, task, and analyzer services
+  version: 1.0.0
+  contact:
+    name: TaskConverterAI Team
+    email: support@taskconverterai.com
+
+servers:
+  - url: http://localhost:8084/api
+    description: Development gateway server
+  - url: https://gateway.taskconverterai.com/api
+    description: Production gateway server
+
+paths:
+  # Authentication endpoints - proxied to auth service
+  /auth/sign-up:
+    post:
+      summary: Create a new user (sign-up)
+      description: Proxies user registration request to auth service
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error - invalid user data
+        '409':
+          description: User already exists
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/login:
+    post:
+      summary: Log in a user
+      description: Proxies user login request to auth service and returns JWT tokens
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+        '400':
+          description: Invalid request format
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/logout:
+    post:
+      summary: Log out current user
+      description: Proxies logout request to auth service
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Logged out successfully
+        '401':
+          description: Not authenticated
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  # Groups management endpoints - proxied to auth service
+  /auth/groups:
+    post:
+      summary: Create a new group
+      description: Proxies group creation request to auth service
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Invalid group data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Group already exists
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+    get:
+      summary: Get user's groups
+      description: Proxies request to get all groups for authenticated user
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          description: Not authenticated
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/groups/{groupId}:
+    get:
+      summary: Get group details
+      description: Proxies request to get specific group information
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '200':
+          description: Group details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetails'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group member
+        '404':
+          description: Group not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+    put:
+      summary: Update group
+      description: Proxies group update request to auth service
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupRequest'
+      responses:
+        '200':
+          description: Group updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Invalid update data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group owner or admin
+        '404':
+          description: Group not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+    delete:
+      summary: Delete group
+      description: Proxies group deletion request to auth service
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '204':
+          description: Group deleted successfully
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group owner
+        '404':
+          description: Group not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/groups/{groupId}/members:
+    post:
+      summary: Add member to group
+      description: Proxies request to add member to group
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '200':
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '400':
+          description: Invalid member data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group owner or admin
+        '404':
+          description: Group or user not found
+        '409':
+          description: User is already a member
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/groups/{groupId}/members/{userId}:
+    delete:
+      summary: Remove member from group
+      description: Proxies request to remove member from group
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User identifier
+      responses:
+        '204':
+          description: Member removed successfully
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group owner or admin
+        '404':
+          description: Group or member not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  /auth/groups/{groupId}/leave:
+    post:
+      summary: Leave group
+      description: Proxies request for user to leave group
+      tags:
+        - Groups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '204':
+          description: Left group successfully
+        '401':
+          description: Not authenticated
+        '403':
+          description: Group owners cannot leave (must transfer ownership first)
+        '404':
+          description: Group not found or user not a member
+        '500':
+          description: Internal server error
+        '503':
+          description: Auth service unavailable
+
+  # Task service endpoints - proxied to task service
+  /tasks:
+    post:
+      summary: Create a new task
+      description: Proxies task creation request to task service. The author ID is automatically extracted from the JWT token.
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group member (if groupId specified)
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+    get:
+      summary: Get all personal tasks for current user
+      description: Proxies request to get user's personal tasks
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of user's personal tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskSummary'
+        '401':
+          description: Not authenticated
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+  /tasks/groups/{groupId}:
+    get:
+      summary: Get group tasks
+      description: Proxies request to get tasks for specific group
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '200':
+          description: List of group tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskSummary'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group member
+        '404':
+          description: Group not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+  /tasks/{taskId}:
+    get:
+      summary: Get task details
+      description: Proxies request to get specific task information
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      responses:
+        '200':
+          description: Task details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not task owner or group member
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+    put:
+      summary: Update task
+      description: Proxies task update request to task service
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid update data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not task owner
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+    delete:
+      summary: Delete task
+      description: Proxies task deletion request to task service
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not task owner
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+  /tasks/{taskId}/subtasks:
+    post:
+      summary: Add subtask to task
+      description: Proxies request to add subtask to existing task
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubtaskRequest'
+      responses:
+        '201':
+          description: Subtask added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subtask'
+        '400':
+          description: Invalid subtask data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not task owner or group member
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+  /tasks/{taskId}/subtasks/{subtaskId}/status:
+    patch:
+      summary: Update subtask status
+      description: Proxies request to update subtask status (DONE/UNDONE)
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+        - name: subtaskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Subtask identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubtaskStatusRequest'
+      responses:
+        '200':
+          description: Subtask status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subtask'
+        '400':
+          description: Invalid status value
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not task owner or group member
+        '404':
+          description: Task or subtask not found
+        '500':
+          description: Internal server error
+        '503':
+          description: Task service unavailable
+
+  # Analyzer service endpoints - proxied to analyzer service
+  /analyzer/audio:
+    post:
+      summary: Analyze audio file
+      description: Proxies audio file analysis request to analyzer service. The user ID is automatically extracted from the JWT token and passed as a query parameter.
+      tags:
+        - Analyzer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AudioAnalysisRequest'
+      responses:
+        '202':
+          description: Audio analysis request accepted for processing
+        '400':
+          description: Invalid audio file or format
+        '413':
+          description: File too large (max 500MB)
+        '500':
+          description: Internal server error
+        '503':
+          description: Analyzer service unavailable
+
+  /analyzer/task:
+    post:
+      summary: Analyze task description
+      description: Proxies task description analysis request to analyzer service. The user ID is automatically extracted from the JWT token and passed as a query parameter.
+      tags:
+        - Analyzer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskAnalysisRequest'
+      responses:
+        '202':
+          description: Task analysis request accepted for processing
+        '400':
+          description: Invalid task description
+        '500':
+          description: Internal server error
+        '503':
+          description: Analyzer service unavailable
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+
+  schemas:
+    NewUser:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Unique username
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          minLength: 8
+          description: User password
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User identifier
+        username:
+          type: string
+          description: Username
+        email:
+          type: string
+          format: email
+          description: User email address
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+
+    Credentials:
+      type: object
+      required:
+        - usernameOrEmail
+        - password
+      properties:
+        usernameOrEmail:
+          type: string
+          description: Username or email address
+        password:
+          type: string
+          description: User password
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        user:
+          $ref: '#/components/schemas/User'
+
+    CreateGroupRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Group name
+        description:
+          type: string
+          maxLength: 500
+          description: Optional group description
+        initialMemberIds:
+          type: array
+          items:
+            type: string
+          description: Optional list of user IDs to add as initial group members
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Group identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        ownerId:
+          type: string
+          description: Group owner user ID
+        memberCount:
+          type: integer
+          description: Number of group members
+        createdAt:
+          type: string
+          format: date-time
+          description: Group creation timestamp
+
+    GroupDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Group identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        ownerId:
+          type: string
+          description: Group owner user ID
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMember'
+          description: List of group members
+        createdAt:
+          type: string
+          format: date-time
+          description: Group creation timestamp
+
+    GroupMember:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User identifier
+        username:
+          type: string
+          description: Username
+        role:
+          type: string
+          enum: [owner, admin, member]
+          description: Member role in group
+        joinedAt:
+          type: string
+          format: date-time
+          description: Timestamp when user joined group
+
+    UpdateGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Updated group name
+        description:
+          type: string
+          maxLength: 500
+          description: Updated group description
+
+    AddMemberRequest:
+      type: object
+      required:
+        - usernameOrEmail
+      properties:
+        usernameOrEmail:
+          type: string
+          description: Username or email of user to add
+        role:
+          type: string
+          enum: [admin, member]
+          default: member
+          description: Role to assign to new member
+
+    # Task Service Schemas
+    Geoposition:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - geoposition
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Optional task description
+        groupId:
+          type: string
+          description: Optional group identifier (if not provided, task is personal)
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        initialSubtasks:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+          description: Optional list of initial subtask texts to create with the task
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        description:
+          type: string
+          description: Task description
+        authorId:
+          type: string
+          description: User ID of task creator
+        groupId:
+          type: string
+          description: Group identifier (null for personal tasks)
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+        subtaskCount:
+          type: integer
+          description: Total number of subtasks
+
+    TaskSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        authorId:
+          type: string
+          description: User ID of task creator
+        groupId:
+          type: string
+          description: Group identifier (null for personal tasks)
+        subtaskCount:
+          type: integer
+          description: Total number of subtasks
+        doneSubtasks:
+          type: integer
+          description: Number of subtasks with DONE status
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+
+    Subtask:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subtask identifier
+        text:
+          type: string
+          description: Subtask description
+        status:
+          type: string
+          enum: [UNDONE, DONE]
+          description: Current subtask status
+        createdAt:
+          type: string
+          format: date-time
+          description: Subtask creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Subtask last update timestamp
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Updated task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Updated task description
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+
+    CreateSubtaskRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Subtask description
+
+    UpdateSubtaskStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [UNDONE, DONE]
+          description: New subtask status
+
+    # Analyzer Service Schemas
+    AudioAnalysisRequest:
+      type: object
+      required:
+        - audioFile
+      properties:
+        audioFile:
+          type: string
+          format: binary
+          description: Audio file to analyze (MP3, WAV formats, max 500MB)
+
+    TaskAnalysisRequest:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Task description text to analyze

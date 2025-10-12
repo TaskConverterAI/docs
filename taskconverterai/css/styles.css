@@ -157,6 +157,14 @@ body {
     font-family: 'Monaco', 'Consolas', monospace;
 }
 
+.service-card__port {
+    font-size: 0.9rem;
+    color: #667eea;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
 .service-card__tags {
     display: flex;
     flex-wrap: wrap;

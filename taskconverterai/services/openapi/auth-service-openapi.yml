@@ -4,11 +4,13 @@ info:
   version: 1.0.0
   description: API for authentication flows (sign-in, log-in, log-out)
 servers:
-  - url: http://localhost:8000
+  - url: http://localhost:8081
     description: Local development server
 tags:
   - name: Authentication
     description: User authentication and authorization endpoints
+  - name: Groups
+    description: User groups management endpoints
 paths:
   /auth/sign-up:
     post:
@@ -58,6 +60,175 @@ paths:
       responses:
         '204':
           description: Logged out
+        '401':
+          description: Not authenticated
+  /groups:
+    post:
+      summary: Create a new group
+      tags:
+        - Groups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Invalid input data
+        '401':
+          description: Not authenticated
+    get:
+      summary: Get all groups for current user
+      tags:
+        - Groups
+      responses:
+        '200':
+          description: List of user's groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupSummary'
+        '401':
+          description: Not authenticated
+  /groups/{groupId}:
+    get:
+      summary: Get detailed group information
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetails'
+        '403':
+          description: Access denied - not a group member
+        '404':
+          description: Group not found
+        '401':
+          description: Not authenticated
+    delete:
+      summary: Delete group (owner only)
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '204':
+          description: Group deleted successfully
+        '403':
+          description: Access denied - not group owner
+        '404':
+          description: Group not found
+        '401':
+          description: Not authenticated
+  /groups/{groupId}/members:
+    post:
+      summary: Add member to group
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '201':
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '400':
+          description: Invalid input or user already in group
+        '403':
+          description: Access denied - not group admin
+        '404':
+          description: Group or user not found
+        '401':
+          description: Not authenticated
+  /groups/{groupId}/members/{userId}:
+    delete:
+      summary: Remove member from group
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User identifier
+      responses:
+        '204':
+          description: Member removed successfully
+        '403':
+          description: Access denied - not group admin
+        '404':
+          description: Group or member not found
+        '401':
+          description: Not authenticated
+  /groups/{groupId}/leave:
+    post:
+      summary: Leave group voluntarily
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '204':
+          description: Left group successfully
+        '200':
+          description: Ownership transfer required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnershipTransferResponse'
+        '403':
+          description: Access denied - not group member
+        '404':
+          description: Group not found
         '401':
           description: Not authenticated
 components:
@@ -117,3 +288,151 @@ components:
           type: string
           default: Bearer
           description: Token type for Authorization header
+    CreateGroupRequest:
+      type: object
+      required:
+        - name
+        - userId
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Group name
+        description:
+          type: string
+          maxLength: 500
+          description: Optional group description
+        userId:
+          type: string
+          description: User ID of the group creator
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Group identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        ownerId:
+          type: string
+          description: User ID of group owner
+        createdAt:
+          type: string
+          format: date-time
+          description: Group creation timestamp
+        memberCount:
+          type: integer
+          description: Total number of group members
+    GroupSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Group identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        memberCount:
+          type: integer
+          description: Total number of group members
+        userRole:
+          type: string
+          enum: [owner, admin, member]
+          description: Current user's role in this group
+        createdAt:
+          type: string
+          format: date-time
+          description: Group creation timestamp
+    GroupDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Group identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        ownerId:
+          type: string
+          description: User ID of group owner
+        createdAt:
+          type: string
+          format: date-time
+          description: Group creation timestamp
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMember'
+          description: List of group members
+        userRole:
+          type: string
+          enum: [owner, admin, member]
+          description: Current user's role in this group
+    GroupMember:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User identifier
+        username:
+          type: string
+          description: Username
+        email:
+          type: string
+          description: User email
+        role:
+          type: string
+          enum: [owner, admin, member]
+          description: User's role in the group
+        joinedAt:
+          type: string
+          format: date-time
+          description: When user joined the group
+    AddMemberRequest:
+      type: object
+      required:
+        - usernameOrEmail
+      properties:
+        usernameOrEmail:
+          type: string
+          description: Username or email address
+        role:
+          type: string
+          enum: [admin, member]
+          default: member
+          description: Role to assign to the new member
+    LeaveGroupRequest:
+      type: object
+      properties:
+        transferOwnershipTo:
+          type: string
+          description: User ID to transfer ownership to (required if current user is owner and group has other members)
+    OwnershipTransferResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Information about required ownership transfer
+        eligibleMembers:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+              username:
+                type: string
+              email:
+                type: string
+          description: List of members eligible to receive ownership
