@@ -33,6 +33,16 @@ const serviceConfig = {
             status: "active",
             version: "1.0.0",
             tags: ["audio", "tasks", "analysis", "async"]
+        },
+        {
+            id: "gateway-service",
+            name: "Gateway Service",
+            description: "Main entrance for TaskConverterAI microservices - unified access to auth, task, and analyzer services",
+            openApiUrl: "services/openapi/gateway-service-openapi.yml",
+            documentationUrl: "services/gateway-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["gateway", "proxy", "auth", "tasks", "analyzer", "unified"]
         }
     ]
 };
