@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Analyzer Service API
+  description: Audio file analysis service with asynchronous processing
+  version: 1.0.0
+  contact:
+    name: TaskConverterAI Team
+    email: support@taskconverterai.com
+
+servers:
+  - url: http://localhost:8083
+    description: Development server
+  - url: https://api.taskconverterai.com/analyzer/v1
+    description: Production server
+
+paths:
+  /audio:
+    post:
+      summary: Submit audio file for analysis
+      description: |
+        Accepts an audio file for asynchronous analysis. The service immediately returns 
+        an acknowledgment while processing the file in the background. Analysis results 
+        are delivered through a separate mechanism.
+      tags:
+        - Analysis
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User ID of the request owner
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audioFile
+              properties:
+                audioFile:
+                  type: string
+                  format: binary
+                  description: Audio file to analyze (MP3 or WAV format, max 500MB)
+
+      responses:
+        '202':
+          description: File accepted for analysis
+        '400':
+          description: Invalid request or unsupported file format
+        '413':
+          description: File size exceeds maximum limit (500MB)
+        '415':
+          description: Unsupported media type (only MP3 and WAV supported)
+        '500':
+          description: Internal server error
+
+  /task:
+    post:
+      summary: Submit task description for analysis
+      description: |
+        Accepts a task description for asynchronous analysis. The service immediately returns 
+        an acknowledgment while processing the description in the background. Analysis results 
+        are delivered through a separate mechanism.
+      tags:
+        - Analysis
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User ID of the request owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskAnalysisRequest'
+      responses:
+        '202':
+          description: Task description accepted for analysis
+        '400':
+          description: Invalid request or missing task description
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    TaskAnalysisRequest:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Task description text to analyze
+      example:
+        description: "Implement user authentication system with OAuth2 support and session management"
+
+

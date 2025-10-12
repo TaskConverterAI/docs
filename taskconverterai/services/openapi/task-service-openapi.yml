@@ -1,0 +1,409 @@
+openapi: 3.0.3
+info:
+  title: Task Service API
+  version: 1.0.0
+  description: API for task management with group collaboration, subtasks, geolocation and status tracking
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+tags:
+  - name: Tasks
+    description: Task management with group collaboration and subtask tracking
+paths:
+  /tasks:
+    post:
+      summary: Create a new task
+      description: Creates a new task with the userId as the task creator
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Access denied - not group member (if groupId specified)
+    get:
+      summary: Get all personal tasks for current user
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: List of user's personal tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskSummary'
+        '401':
+          description: Not authenticated
+  /tasks/groups/{groupId}:
+    get:
+      summary: Get all tasks for a specific group
+      tags:
+        - Tasks
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Group identifier
+      responses:
+        '200':
+          description: List of group tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskSummary'
+        '403':
+          description: Access denied - not group member
+        '404':
+          description: Group not found
+        '401':
+          description: Not authenticated
+  /tasks/{taskId}:
+    get:
+      summary: Get detailed task information
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetails'
+        '403':
+          description: Access denied - not task author or group member
+        '404':
+          description: Task not found
+        '401':
+          description: Not authenticated
+    put:
+      summary: Update task details
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input data
+        '403':
+          description: Access denied - not task author or group admin
+        '404':
+          description: Task not found
+        '401':
+          description: Not authenticated
+    delete:
+      summary: Delete task
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      responses:
+        '204':
+          description: Task deleted successfully
+        '403':
+          description: Access denied - not task author or group admin
+        '404':
+          description: Task not found
+        '401':
+          description: Not authenticated
+  /tasks/{taskId}/subtasks:
+    post:
+      summary: Add subtask to task
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSubtaskRequest'
+      responses:
+        '201':
+          description: Subtask added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subtask'
+        '400':
+          description: Invalid subtask data
+        '403':
+          description: Access denied - not task author or group member
+        '404':
+          description: Task not found
+        '401':
+          description: Not authenticated
+  /tasks/{taskId}/subtasks/{subtaskId}/status:
+    put:
+      summary: Update subtask status
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task identifier
+        - name: subtaskId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Subtask identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubtaskStatusRequest'
+      responses:
+        '200':
+          description: Subtask status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subtask'
+        '400':
+          description: Invalid status value
+        '403':
+          description: Access denied - not task author or group member
+        '404':
+          description: Task or subtask not found
+        '401':
+          description: Not authenticated
+components:
+  schemas:
+    Geoposition:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - userId
+        - geoposition
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Optional task description
+        groupId:
+          type: string
+          description: Optional group identifier (if not provided, task is personal)
+        userId:
+          type: string
+          description: User ID of task creator
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        description:
+          type: string
+          description: Task description
+        authorId:
+          type: string
+          description: User ID of task creator
+        groupId:
+          type: string
+          description: Group identifier (null for personal tasks)
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+        subtaskCount:
+          type: integer
+          description: Total number of subtasks
+    TaskSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        authorId:
+          type: string
+          description: User ID of task creator
+        groupId:
+          type: string
+          description: Group identifier (null for personal tasks)
+        subtaskCount:
+          type: integer
+          description: Total number of subtasks
+        doneSubtasks:
+          type: integer
+          description: Number of subtasks with DONE status
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+    TaskDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        description:
+          type: string
+          description: Task description
+        authorId:
+          type: string
+          description: User ID of task creator
+        groupId:
+          type: string
+          description: Group identifier (null for personal tasks)
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subtask'
+          description: List of subtasks with current statuses
+    Subtask:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subtask identifier
+        text:
+          type: string
+          description: Subtask description
+        status:
+          type: string
+          enum: [UNDONE, DONE]
+          description: Current subtask status
+        createdAt:
+          type: string
+          format: date-time
+          description: Subtask creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Subtask last update timestamp
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Updated task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Updated task description
+        geoposition:
+          $ref: '#/components/schemas/Geoposition'
+    AddSubtaskRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Subtask description
+    UpdateSubtaskStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [UNDONE, DONE]
+          description: New subtask status

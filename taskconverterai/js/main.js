@@ -1,20 +1,9 @@
-// Service configuration - Single test service for MVP
+// Service configuration - Production services only
 const serviceConfig = {
     applicationTitle: "TaskConverterAI",
     description: "Central access point for TaskConverterAI microservices",
-    lastUpdated: "2025-10-07T00:00:00Z",
+    lastUpdated: "2025-10-13T00:00:00Z",
     services: [
-        {
-            id: "test-service",
-            name: "Test Service",
-            description: "Example service for demonstrating OpenAPI documentation and TaskConverterAI functionality",
-            openApiUrl: "services/openapi/test-service-openapi.yml",
-            documentationUrl: "services/test-service.html",
-            status: "active",
-            version: "1.0.0",
-            tags: ["demo", "testing", "example"]
-        }
-        ,
         {
             id: "auth-service",
             name: "Auth Service",
@@ -24,6 +13,36 @@ const serviceConfig = {
             status: "active",
             version: "1.0.0",
             tags: ["auth", "security"]
+        },
+        {
+            id: "task-service",
+            name: "Task Service",
+            description: "Task management with group collaboration, subtasks, geolocation and status tracking",
+            openApiUrl: "services/openapi/task-service-openapi.yml",
+            documentationUrl: "services/task-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["tasks", "collaboration", "geolocation"]
+        },
+        {
+            id: "analyzer-service",
+            name: "Analyzer Service",
+            description: "Audio file and task description analysis with asynchronous processing",
+            openApiUrl: "services/openapi/analyzer-service-openapi.yml",
+            documentationUrl: "services/analyzer-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["audio", "tasks", "analysis", "async"]
+        },
+        {
+            id: "gateway-service",
+            name: "Gateway Service",
+            description: "Main entrance for TaskConverterAI microservices - unified access to auth, task, and analyzer services",
+            openApiUrl: "services/openapi/gateway-service-openapi.yml",
+            documentationUrl: "services/gateway-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["gateway", "proxy", "auth", "tasks", "analyzer", "unified"]
         }
     ]
 };
