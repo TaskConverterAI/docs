@@ -14,6 +14,17 @@ const serviceConfig = {
             version: "1.0.0",
             tags: ["demo", "testing", "example"]
         }
+        ,
+        {
+            id: "auth-service",
+            name: "Auth Service",
+            description: "Authentication microservice: sign-up (create user), log-in, log-out",
+            openApiUrl: "services/openapi/auth-service-openapi.yml",
+            documentationUrl: "services/auth-service.html",
+            status: "active",
+            version: "1.0.0",
+            tags: ["auth", "security"]
+        }
     ]
 };
 

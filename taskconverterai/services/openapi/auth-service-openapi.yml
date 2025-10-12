@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  version: 1.0.0
+  description: API for authentication flows (sign-in, log-in, log-out)
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+paths:
+  /auth/sign-up:
+    post:
+      summary: Create a new user (sign-up)
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+  /auth/login:
+    post:
+      summary: Log in a user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      summary: Log out current user
+      tags:
+        - Authentication
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Not authenticated
+components:
+  schemas:
+    NewUser:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          description: Unique username
+        email:
+          type: string
+          format: email
+          description: Unique user email
+        password:
+          type: string
+          minLength: 8
+          description: Must include at least one digit, one uppercase letter and one special character
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+    Credentials:
+      type: object
+      required:
+        - usernameOrEmail
+        - password
+      properties:
+        usernameOrEmail:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token for API authentication
+        refreshToken:
+          type: string
+          description: JWT refresh token for obtaining new access tokens
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+        tokenType:
+          type: string
+          default: Bearer
+          description: Token type for Authorization header
