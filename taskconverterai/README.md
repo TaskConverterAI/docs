@@ -37,9 +37,15 @@ taskconverterai/
 ├── js/
 │   └── main.js                         # JavaScript logic
 └── services/
-    ├── test-service.html               # Service documentation
+    ├── auth-service.html               # Auth service documentation
+    ├── task-service.html               # Task service documentation
+    ├── analyzer-service.html           # Analyzer service documentation
+    ├── gateway-service.html            # Gateway service documentation
     └── openapi/
-        └── test-service-openapi.yml    # OpenAPI spec
+        ├── auth-service-openapi.yml    # Auth service OpenAPI spec
+        ├── task-service-openapi.yml    # Task service OpenAPI spec
+        ├── analyzer-service-openapi.yml # Analyzer service OpenAPI spec
+        └── gateway-service-openapi.yml # Gateway service OpenAPI spec
 ```
 
 ## Testing the Application

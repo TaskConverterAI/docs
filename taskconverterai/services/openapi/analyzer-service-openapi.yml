@@ -47,6 +47,10 @@ paths:
       responses:
         '202':
           description: File accepted for analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSubmissionResponse'
         '400':
           description: Invalid request or unsupported file format
         '413':
@@ -81,8 +85,43 @@ paths:
       responses:
         '202':
           description: Task description accepted for analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSubmissionResponse'
         '400':
           description: Invalid request or missing task description
+        '500':
+          description: Internal server error
+
+  /jobs/{jobId}:
+    get:
+      summary: Get job status by ID
+      description: |
+        Retrieves the current status and metadata for an asynchronous analysis job.
+        Only the job submitter or authorized service accounts can access job details.
+      tags:
+        - Job Status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Job identifier returned from analysis submission
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+        '403':
+          description: Forbidden - not the job submitter or authorized account
+        '404':
+          description: Job not found or expired
         '500':
           description: Internal server error
 
@@ -100,5 +139,60 @@ components:
           description: Task description text to analyze
       example:
         description: "Implement user authentication system with OAuth2 support and session management"
+
+    JobSubmissionResponse:
+      type: object
+      required:
+        - jobId
+      properties:
+        jobId:
+          type: string
+          description: Unique identifier for the submitted analysis job
+      example:
+        jobId: "job_12345_audio_analysis"
+
+    JobStatus:
+      type: object
+      required:
+        - jobId
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        jobId:
+          type: string
+          description: Unique job identifier
+        status:
+          type: string
+          enum: [QUEUED, RUNNING, SUCCESS, FAILED, CANCELLED, EXPIRED]
+          description: Current job status
+        submitterUserId:
+          type: string
+          description: User ID who submitted the job
+        type:
+          type: string
+          enum: [audio, task]
+          description: Type of analysis job
+        resultReference:
+          type: string
+          description: Reference to analysis result when status is SUCCESS
+        error:
+          type: string
+          description: Error message when status is FAILED
+        createdAt:
+          type: string
+          format: date-time
+          description: Job creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Job last update timestamp
+      example:
+        jobId: "job_12345_audio_analysis"
+        status: "RUNNING"
+        submitterUserId: "user_789"
+        type: "audio"
+        createdAt: "2025-10-14T10:30:00Z"
+        updatedAt: "2025-10-14T10:32:00Z"
 
 
