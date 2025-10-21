@@ -12,9 +12,10 @@ tags:
   - name: Groups
     description: User groups management endpoints
 paths:
-  /auth/sign-up:
+  /auth/register:
     post:
-      summary: Create a new user (sign-up)
+      summary: Register a new user
+      description: Create a new user account and return authentication tokens
       tags:
         - Authentication
       requestBody:
@@ -22,19 +23,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewUser'
+              $ref: '#/components/schemas/RegistrationRequest'
       responses:
         '201':
-          description: User created
+          description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/TokenResponse'
         '400':
-          description: Validation error
+          description: Validation error - invalid input data
+        '409':
+          description: Conflict - username or email already exists
+        '500':
+          description: Internal server error
+
   /auth/login:
     post:
       summary: Log in a user
+      description: Authenticate user with username/email and password, return authentication tokens
       tags:
         - Authentication
       requestBody:
@@ -42,26 +49,97 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Credentials'
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation error - invalid input data
         '401':
           description: Invalid credentials
+        '500':
+          description: Internal server error
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Generate a new access token using a valid refresh token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshAccessTokenRequest'
+      responses:
+        '200':
+          description: Access token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '400':
+          description: Validation error - invalid input data
+        '401':
+          description: Invalid or expired refresh token
+        '500':
+          description: Internal server error
+
   /auth/logout:
     post:
       summary: Log out current user
+      description: Deactivate the refresh token and invalidate the user session
       tags:
         - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvalidateSessionRequest'
       responses:
         '204':
-          description: Logged out
+          description: User logged out and session invalidated successfully
+        '400':
+          description: Validation error - invalid input data
         '401':
           description: Not authenticated
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
+  /auth/decode:
+    post:
+      summary: Decode access token
+      description: Decode and validate an access token to extract user information
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecodeAccessTokenRequest'
+      responses:
+        '200':
+          description: Token decoded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecodedTokenResponse'
+        '400':
+          description: Validation error - invalid input data
+        '401':
+          description: Invalid or expired access token
+        '500':
+          description: Internal server error
+
   /groups:
     post:
       summary: Create a new group
@@ -288,6 +366,131 @@ components:
           type: string
           default: Bearer
           description: Token type for Authorization header
+
+    RegistrationRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 255
+          description: Username must not be blank and be at most 255 characters
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Email must be valid and at most 255 characters
+        password:
+          type: string
+          maxLength: 255
+          description: Password must not be blank and be at most 255 characters
+      example:
+        username: "johndoe"
+        email: "john.doe@example.com"
+        password: "SecurePassword123!"
+
+    TokenResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token for API authentication
+        refreshToken:
+          type: string
+          description: JWT refresh token for obtaining new access tokens
+      example:
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    LoginRequest:
+      type: object
+      required:
+        - usernameOrEmail
+        - password
+      properties:
+        usernameOrEmail:
+          type: string
+          maxLength: 255
+          description: Username or email must not be blank and be at most 255 characters
+        password:
+          type: string
+          maxLength: 255
+          description: Password must not be blank and be at most 255 characters
+      example:
+        usernameOrEmail: "johndoe"
+        password: "SecurePassword123!"
+
+    RefreshAccessTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          maxLength: 255
+          description: Refresh token must not be blank and be at most 255 characters
+      example:
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    AccessTokenResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token for API authentication
+      example:
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    InvalidateSessionRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: User ID must not be null and must be positive
+      example:
+        userId: 12345
+
+    DecodeAccessTokenRequest:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          maxLength: 511
+          description: Access token must not be blank and be at most 511 characters
+      example:
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    DecodedTokenResponse:
+      type: object
+      required:
+        - userId
+        - role
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: User ID extracted from the token
+        role:
+          type: string
+          description: User role extracted from the token
+      example:
+        userId: 12345
+        role: "USER"
+
     CreateGroupRequest:
       type: object
       required:
