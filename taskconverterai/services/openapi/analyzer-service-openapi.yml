@@ -1,198 +1,187 @@
-openapi: 3.0.3
+openapi: "3.0.3"
 info:
-  title: Analyzer Service API
-  description: Audio file analysis service with asynchronous processing
-  version: 1.0.0
-  contact:
-    name: TaskConverterAI Team
-    email: support@taskconverterai.com
-
+  title: "Analyzer Service API"
+  description: "Сервис асинхронного анализа аудио и текстовых задач. /audio выполняет только транскрибацию и возвращает реплики спикеров (одноразовая выдача — результат удаляется после получения). /task выполняет семантический анализ и формирует саммари и задачи (JSON)."
+  version: "1.0.2"
 servers:
-  - url: http://localhost:8083
-    description: Development server
-  - url: https://api.taskconverterai.com/analyzer/v1
-    description: Production server
-
+  - url: "http://0.0.0.0:8080"
 paths:
+  /:
+    get:
+      summary: "Проверка работы"
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema: { type: string }
+              examples: { rootExample: { value: "OK" } }
   /audio:
     post:
-      summary: Submit audio file for analysis
-      description: |
-        Accepts an audio file for asynchronous analysis. The service immediately returns 
-        an acknowledgment while processing the file in the background. Analysis results 
-        are delivered through a separate mechanism.
-      tags:
-        - Analysis
+      summary: "Асинхронная транскрибация аудио"
+      description: "Принимает бинарный аудио файл до 500MB. Выполняет ТОЛЬКО транскрибацию (без саммари). Результат (список реплик) можно получить через /jobs/{jobId}/result ОДИН раз — после выдачи данные удаляются."
       parameters:
-        - name: userId
-          in: query
+        - in: query
+          name: userID
           required: true
-          schema:
-            type: string
-          description: User ID of the request owner
+          schema: { type: string }
+          description: "Идентификатор пользователя"
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required:
-                - audioFile
               properties:
-                audioFile:
+                file:
                   type: string
                   format: binary
-                  description: Audio file to analyze (MP3 or WAV format, max 500MB)
-
+            examples:
+              curlExample:
+                summary: "Пример отправки файла"
+                description: "Отправка mp3 файла"
+                value: { }
+          application/octet-stream:
+            schema: { type: string, format: binary }
       responses:
-        '202':
-          description: File accepted for analysis
+        "200":
+          description: "Идентификатор созданной задачи транскрибации"
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/JobSubmissionResponse'
-        '400':
-          description: Invalid request or unsupported file format
-        '413':
-          description: File size exceeds maximum limit (500MB)
-        '415':
-          description: Unsupported media type (only MP3 and WAV supported)
-        '500':
-          description: Internal server error
-
+              schema: { $ref: '#/components/schemas/JobCreated' }
+        "400": { description: "Ошибка валидации / превышен размер" }
+      x-codeSamples:
+        - lang: Bash
+          label: curl
+          source: |
+            curl -X POST "http://localhost:8080/audio?userID=user123" \
+                 -H "Content-Type: multipart/form-data" \
+                 -F "file=@sample.mp3" \
+                 -v
+        - lang: Python
+          label: python-requests
+          source: |
+            import requests
+            with open("sample.mp3", "rb") as f:
+                r = requests.post(
+                    "http://localhost:8080/audio",
+                    params={"userID": "user123"},
+                    files={"file": ("sample.mp3", f, "audio/mp3")}
+                )
+                print(r.json())
   /task:
     post:
-      summary: Submit task description for analysis
-      description: |
-        Accepts a task description for asynchronous analysis. The service immediately returns 
-        an acknowledgment while processing the description in the background. Analysis results 
-        are delivered through a separate mechanism.
-      tags:
-        - Analysis
+      summary: "Асинхронный анализ текстового описания"
+      description: "Принимает произвольный текст. Выполняет анализ и формирует MeetingSummary (саммари + задачи)."
       parameters:
-        - name: userId
-          in: query
+        - in: query
+          name: userID
           required: true
-          schema:
-            type: string
-          description: User ID of the request owner
+          schema: { type: string }
+          description: "Идентификатор пользователя"
       requestBody:
         required: true
         content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TaskAnalysisRequest'
+          text/plain:
+            schema: { type: string }
       responses:
-        '202':
-          description: Task description accepted for analysis
+        "200":
+          description: "Идентификатор созданной задачи анализа"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobCreated' }
+        "400": { description: "Ошибка валидации входных данных" }
+  /jobs:
+    get:
+      summary: "Список задач"
+      description: "Возвращает список задач (jobs). Можно фильтровать по userID."
+      parameters:
+        - in: query
+          name: userID
+          required: false
+          schema: { type: string }
+          description: "Если указан — возвращаются только задачи этого пользователя"
+      responses:
+        "200":
+          description: "Массив задач"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobSubmissionResponse'
-        '400':
-          description: Invalid request or missing task description
-        '500':
-          description: Internal server error
-
+                type: array
+                items: { $ref: '#/components/schemas/AnalysisJob' }
   /jobs/{jobId}:
     get:
-      summary: Get job status by ID
-      description: |
-        Retrieves the current status and metadata for an asynchronous analysis job.
-        Only the job submitter or authorized service accounts can access job details.
-      tags:
-        - Job Status
+      summary: "Получение статуса задачи"
       parameters:
-        - name: jobId
-          in: path
+        - in: path
+          name: jobId
           required: true
-          schema:
-            type: string
-          description: Job identifier returned from analysis submission
+          schema: { type: string }
       responses:
-        '200':
-          description: Job status retrieved successfully
+        "200":
+          description: "Текущий статус"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisJob' }
+        "404": { description: "Не найдено" }
+  /jobs/{jobId}/result:
+    get:
+      summary: "Получение результата задачи"
+      description: "Для AUDIO: массив реплик (одноразовая выдача, после ответа транскрипт удаляется). Для TASK: MeetingSummary."
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: "Результат транскрибирования или анализа"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobStatus'
-        '401':
-          description: Unauthorized - invalid or missing authentication
-        '403':
-          description: Forbidden - not the job submitter or authorized account
-        '404':
-          description: Job not found or expired
-        '500':
-          description: Internal server error
-
+                oneOf:
+                  - type: array
+                    items: { $ref: '#/components/schemas/PublicSpeakerUtterance' }
+                    description: "Список реплик (для AUDIO)"
+                  - $ref: '#/components/schemas/MeetingSummary'
+        "404": { description: "Результат не найден" }
+        "409": { description: "Задача ещё не завершена" }
 components:
   schemas:
-    TaskAnalysisRequest:
+    JobCreated:
       type: object
-      required:
-        - description
       properties:
-        description:
-          type: string
-          minLength: 1
-          maxLength: 2000
-          description: Task description text to analyze
-      example:
-        description: "Implement user authentication system with OAuth2 support and session management"
-
-    JobSubmissionResponse:
+        jobId: { type: string }
+      required: [jobId]
+    AnalysisJob:
       type: object
-      required:
-        - jobId
       properties:
-        jobId:
-          type: string
-          description: Unique identifier for the submitted analysis job
-      example:
-        jobId: "job_12345_audio_analysis"
-
-    JobStatus:
+        jobId: { type: string }
+        status: { type: string, enum: [PENDING, RUNNING, SUCCEEDED, FAILED] }
+        submitterUserId: { type: string }
+        type: { type: string, enum: [AUDIO, TASK] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        errorMessage: { type: string, nullable: true }
+      required: [jobId, status, submitterUserId, type, createdAt, updatedAt]
+    PublicSpeakerUtterance:
       type: object
-      required:
-        - jobId
-        - status
-        - createdAt
-        - updatedAt
       properties:
-        jobId:
-          type: string
-          description: Unique job identifier
-        status:
-          type: string
-          enum: [QUEUED, RUNNING, SUCCESS, FAILED, CANCELLED, EXPIRED]
-          description: Current job status
-        submitterUserId:
-          type: string
-          description: User ID who submitted the job
-        type:
-          type: string
-          enum: [audio, task]
-          description: Type of analysis job
-        resultReference:
-          type: string
-          description: Reference to analysis result when status is SUCCESS
-        error:
-          type: string
-          description: Error message when status is FAILED
-        createdAt:
-          type: string
-          format: date-time
-          description: Job creation timestamp
-        updatedAt:
-          type: string
-          format: date-time
-          description: Job last update timestamp
-      example:
-        jobId: "job_12345_audio_analysis"
-        status: "RUNNING"
-        submitterUserId: "user_789"
-        type: "audio"
-        createdAt: "2025-10-14T10:30:00Z"
-        updatedAt: "2025-10-14T10:32:00Z"
-
-
+        speaker: { type: string, nullable: true }
+        text: { type: string }
+      required: [text]
+    TaskItem:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        assignee: { type: string, nullable: true }
+      required: [title, description]
+    MeetingSummary:
+      type: object
+      properties:
+        summary: { type: string }
+        tasks:
+          type: array
+          items: { $ref: '#/components/schemas/TaskItem' }
+      required: [summary, tasks]
