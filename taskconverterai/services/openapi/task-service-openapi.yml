@@ -31,55 +31,9 @@ paths:
                 $ref: '#/components/schemas/Task'
         '400':
           description: Invalid input data
-        '401':
-          description: Not authenticated
-        '403':
-          description: Access denied - not group member (if groupId specified)
-    get:
-      summary: Get all personal tasks for current user
-      tags:
-        - Tasks
-      responses:
-        '200':
-          description: List of user's personal tasks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TaskSummary'
-        '401':
-          description: Not authenticated
-  /tasks/groups/{groupId}:
-    get:
-      summary: Get all tasks for a specific group
-      tags:
-        - Tasks
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Group identifier
-      responses:
-        '200':
-          description: List of group tasks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TaskSummary'
-        '403':
-          description: Access denied - not group member
-        '404':
-          description: Group not found
-        '401':
-          description: Not authenticated
   /tasks/{taskId}:
     get:
-      summary: Get detailed task information
+      summary: Getting task by taskId
       tags:
         - Tasks
       parameters:
@@ -87,21 +41,17 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Task identifier
       responses:
         '200':
-          description: Task details
+          description: Task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskDetails'
-        '403':
-          description: Access denied - not task author or group member
+                  $ref: '#/components/schemas/Task'
         '404':
           description: Task not found
-        '401':
-          description: Not authenticated
     put:
       summary: Update task details
       tags:
@@ -111,7 +61,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Task identifier
       requestBody:
         required: true
@@ -128,14 +78,10 @@ paths:
                 $ref: '#/components/schemas/Task'
         '400':
           description: Invalid input data
-        '403':
-          description: Access denied - not task author or group admin
         '404':
           description: Task not found
-        '401':
-          description: Not authenticated
     delete:
-      summary: Delete task
+      summary: Delete task/subtask
       tags:
         - Tasks
       parameters:
@@ -148,13 +94,170 @@ paths:
       responses:
         '204':
           description: Task deleted successfully
-        '403':
-          description: Access denied - not task author or group admin
         '404':
           description: Task not found
-        '401':
-          description: Not authenticated
-  /tasks/{taskId}/subtasks:
+  /tasks/{taskId}/comment:
+    put:
+      summary: Add comment for task/subtask
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Task identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '200':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Task not found
+
+  /tasks/comment/{commentId}:
+    delete:
+      summary: Delete comment
+      tags:
+        - Tasks
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Comment identifier
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Comment not found
+
+  /tasks/personal/{userId}:
+    get:
+      summary: Get all personal tasks for user
+      tags:
+        - Tasks
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User identifier
+      responses:
+        '200':
+          description: List of user's personal tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /tasks/user/{userId}:
+    get:
+      summary: Get all the tasks a user has created
+      tags:
+        - Tasks
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User identifier
+      responses:
+        '200':
+          description: List of all user tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /tasks/doer/{doerId}:
+    get:
+      summary: Get all tasks to which a user is assigned
+      tags:
+        - Tasks
+      parameters:
+        - name: doerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID of task performer
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /tasks/group/{groupId}:
+    get:
+      summary: Get all tasks for a specific group
+      tags:
+        - Tasks
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Group identifier
+      responses:
+        '200':
+          description: List of group tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /tasks/details/{taskId}:
+    get:
+      summary: Get detailed task information
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Task identifier
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetails'
+        '404':
+          description: Task not found
+  /tasks/{taskId}/subtask:
     post:
       summary: Add subtask to task
       tags:
@@ -164,7 +267,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Task identifier
       requestBody:
         required: true
@@ -181,29 +284,19 @@ paths:
                 $ref: '#/components/schemas/Subtask'
         '400':
           description: Invalid subtask data
-        '403':
-          description: Access denied - not task author or group member
         '404':
           description: Task not found
-        '401':
-          description: Not authenticated
-  /tasks/{taskId}/subtasks/{subtaskId}/status:
+  /tasks/subtasks/{subtaskId}/status:
     put:
       summary: Update subtask status
       tags:
         - Tasks
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Task identifier
         - name: subtaskId
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Subtask identifier
       requestBody:
         required: true
@@ -228,11 +321,13 @@ paths:
           description: Not authenticated
 components:
   schemas:
-    Geoposition:
+    Location:
       type: object
       required:
         - latitude
         - longitude
+        - name
+        - remindByLocation
       properties:
         latitude:
           type: number
@@ -246,12 +341,21 @@ components:
           minimum: -180
           maximum: 180
           description: Longitude coordinate
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Name of location
+        remindByLocation:
+          type: boolean
     CreateTaskRequest:
       type: object
       required:
         - title
-        - userId
-        - geoposition
+        - description
+        - authorId
+        - location
+        - deadline
       properties:
         title:
           type: string
@@ -261,20 +365,25 @@ components:
         description:
           type: string
           maxLength: 1000
-          description: Optional task description
+          description: Task description
         groupId:
-          type: string
+          type: integer
           description: Optional group identifier (if not provided, task is personal)
-        userId:
-          type: string
+        authorId:
+          type: integer
           description: User ID of task creator
-        geoposition:
-          $ref: '#/components/schemas/Geoposition'
+        doerId:
+          type: integer
+          description: User ID of task performer
+        location:
+          $ref: '#/components/schemas/Location'
+        deadline:
+          $ref: '#/components/schemas/Deadline'
     Task:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Task identifier
         title:
           type: string
@@ -282,44 +391,22 @@ components:
         description:
           type: string
           description: Task description
+        taskType:
+          type: integer
+          description: 0 for task, 1 for subtask
         authorId:
-          type: string
+          type: integer
           description: User ID of task creator
         groupId:
-          type: string
+          type: integer
           description: Group identifier (null for personal tasks)
-        geoposition:
-          $ref: '#/components/schemas/Geoposition'
-        createdAt:
-          type: string
-          format: date-time
-          description: Task creation timestamp
-        subtaskCount:
+        doerId:
           type: integer
-          description: Total number of subtasks
-    TaskSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Task identifier
-        title:
-          type: string
-          description: Task title
-        authorId:
-          type: string
-          description: User ID of task creator
-        groupId:
-          type: string
-          description: Group identifier (null for personal tasks)
-        subtaskCount:
-          type: integer
-          description: Total number of subtasks
-        doneSubtasks:
-          type: integer
-          description: Number of subtasks with DONE status
-        geoposition:
-          $ref: '#/components/schemas/Geoposition'
+          description: User ID of task performer
+        location:
+          $ref: '#/components/schemas/Location'
+        deadline:
+          $ref: '#/components/schemas/Deadline'
         createdAt:
           type: string
           format: date-time
@@ -328,7 +415,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Task identifier
         title:
           type: string
@@ -337,13 +424,18 @@ components:
           type: string
           description: Task description
         authorId:
-          type: string
+          type: integer
           description: User ID of task creator
         groupId:
-          type: string
+          type: integer
           description: Group identifier (null for personal tasks)
-        geoposition:
-          $ref: '#/components/schemas/Geoposition'
+        doerId:
+          type: integer
+          description: User ID of task performer
+        location:
+          $ref: '#/components/schemas/Location'
+        deadline:
+          $ref: '#/components/schemas/Deadline'
         createdAt:
           type: string
           format: date-time
@@ -353,15 +445,60 @@ components:
           items:
             $ref: '#/components/schemas/Subtask'
           description: List of subtasks with current statuses
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+          description: List of comments for the task
+
+    Deadline:
+      type: object
+      properties:
+        time:
+          type: string
+          format: date-time
+          description: Deadline time
+        remindByTime:
+          type: boolean
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Comment identifier
+        taskId:
+          type: integer
+          description: Task identifier
+        authorId:
+          type: integer
+          description: User ID of comment creator
+        text:
+          type: string
+          description: Text of comment
+        createdAt:
+          type: string
+          format: date-time
+          description: Comment creation timestamp
+    
     Subtask:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Subtask identifier
-        text:
+        description:
           type: string
           description: Subtask description
+        authorId:
+          type: integer
+          description: User ID of task creator
+        groupId:
+          type: integer
+          description: Group identifier (null for personal tasks)
+        doerId:
+          type: integer
+          description: User ID of task performer
         status:
           type: string
           enum: [UNDONE, DONE]
@@ -374,6 +511,11 @@ components:
           type: string
           format: date-time
           description: Subtask last update timestamp
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+          description: List of comments for the task
     UpdateTaskRequest:
       type: object
       properties:
@@ -386,8 +528,13 @@ components:
           type: string
           maxLength: 1000
           description: Updated task description
-        geoposition:
-          $ref: '#/components/schemas/Geoposition'
+        location:
+          $ref: '#/components/schemas/location'
+        deadline:
+          $ref: '#/components/schemas/deadline'
+        doerId:
+          type: integer
+          description: User ID of task performer
     AddSubtaskRequest:
       type: object
       required:
@@ -407,3 +554,12 @@ components:
           type: string
           enum: [UNDONE, DONE]
           description: New subtask status
+    AddCommentRequest:
+      type: object
+      properties:
+        authorId:
+          type: integer
+          description: User ID of task creator
+        text:
+          type: string
+          description: Text of comment
