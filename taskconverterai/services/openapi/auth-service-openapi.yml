@@ -522,7 +522,7 @@ components:
           type: string
           description: Group description
         ownerId:
-          type: string
+          type: integer
           description: User ID of group owner
         createdAt:
           type: string
@@ -567,7 +567,7 @@ components:
           type: string
           description: Group description
         ownerId:
-          type: string
+          type: integer
           description: User ID of group owner
         createdAt:
           type: string
