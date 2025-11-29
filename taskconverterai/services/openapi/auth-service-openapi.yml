@@ -211,7 +211,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Group identifier
       responses:
         '204':
@@ -232,7 +232,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Group identifier
       requestBody:
         required: true
@@ -265,7 +265,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Group identifier
         - name: userId
           in: path
@@ -292,7 +292,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
           description: Group identifier
       responses:
         '204':
@@ -513,7 +513,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Group identifier
         name:
           type: string
@@ -535,7 +535,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Group identifier
         name:
           type: string
@@ -558,7 +558,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: Group identifier
         name:
           type: string
