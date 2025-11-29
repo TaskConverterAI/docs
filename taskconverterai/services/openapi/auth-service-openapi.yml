@@ -586,7 +586,7 @@ components:
       type: object
       properties:
         userId:
-          type: string
+          type: integer
           description: User identifier
         username:
           type: string
@@ -633,7 +633,7 @@ components:
             type: object
             properties:
               userId:
-                type: string
+                type: integer
               username:
                 type: string
               email:
