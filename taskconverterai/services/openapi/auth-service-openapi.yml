@@ -546,10 +546,6 @@ components:
         memberCount:
           type: integer
           description: Total number of group members
-        userRole:
-          type: string
-          enum: [owner, admin, member]
-          description: Current user's role in this group
         createdAt:
           type: string
           format: date-time
@@ -578,10 +574,6 @@ components:
           items:
             $ref: '#/components/schemas/GroupMember'
           description: List of group members
-        userRole:
-          type: string
-          enum: [owner, admin, member]
-          description: Current user's role in this group
     GroupMember:
       type: object
       properties:
