@@ -569,6 +569,9 @@ components:
           type: string
           format: date-time
           description: Group creation timestamp
+        memberCount:
+          type: integer
+          description: Total number of group members
         members:
           type: array
           items:
