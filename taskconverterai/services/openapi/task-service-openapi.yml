@@ -503,6 +503,9 @@ components:
           type: string
           maxLength: 1000
           description: Task description
+        priority:
+          type: string
+          description: Task priority (LOW, MIDDLE, HIGH). If not provided, default value MIDDLE
         groupId:
           type: integer
           description: Optional group identifier (if not provided, task is personal)
@@ -531,6 +534,9 @@ components:
         taskType:
           type: integer
           description: 0 for task, 1 for note
+        priority:
+          type: string
+          description: Task priority (LOW, MIDDLE, HIGH)
         authorId:
           type: integer
           description: User ID of task creator
@@ -560,6 +566,9 @@ components:
         description:
           type: string
           description: Task description
+        priority:
+          type: string
+          description: Task priority (LOW, MIDDLE, HIGH)
         authorId:
           type: integer
           description: User ID of task creator
@@ -594,6 +603,9 @@ components:
               type: string
               maxLength: 1000
               description: Updated task description
+            priority:
+              type: string
+              description: Task priority (LOW, MIDDLE, HIGH)
             location:
               $ref: '#/components/schemas/location'
             deadline:
