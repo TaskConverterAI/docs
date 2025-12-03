@@ -491,8 +491,6 @@ components:
         - title
         - description
         - authorId
-        - location
-        - deadline
       properties:
         title:
           type: string
@@ -531,9 +529,9 @@ components:
         description:
           type: string
           description: Task description
-        taskType:
-          type: integer
-          description: 0 for task, 1 for note
+        status:
+          type: string
+          description: Status of task (DONE, UNDONE)
         priority:
           type: string
           description: Task priority (LOW, MIDDLE, HIGH)
@@ -566,6 +564,9 @@ components:
         description:
           type: string
           description: Task description
+        status:
+          type: string
+          description: Status of task (DONE, UNDONE)
         priority:
           type: string
           description: Task priority (LOW, MIDDLE, HIGH)
@@ -603,6 +604,9 @@ components:
               type: string
               maxLength: 1000
               description: Updated task description
+            status:
+              type: string
+              description: Status of task (DONE, UNDONE)
             priority:
               type: string
               description: Task priority (LOW, MIDDLE, HIGH)
@@ -683,7 +687,6 @@ components:
           - title
           - description
           - authorId
-          - location
         properties:
           title:
             type: string
@@ -714,9 +717,6 @@ components:
         description:
           type: string
           description: Note description
-        taskType:
-          type: integer
-          description: 0 for task, 1 for note
         authorId:
           type: integer
           description: User ID of note creator
