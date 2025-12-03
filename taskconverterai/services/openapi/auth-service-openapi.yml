@@ -187,7 +187,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: int
           description: Group identifier
       responses:
         '200':
@@ -202,6 +202,27 @@ paths:
           description: Group not found
         '401':
           description: Not authenticated
+  /groups/members/{memberId}:
+    get:
+      summary: Get user information information
+      tags:
+        - Groups
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: int
+          description: Global member identifier
+      responses:
+        '200':
+          description: User info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '404':
+          description: User not found
     delete:
       summary: Delete group (owner only)
       tags:
