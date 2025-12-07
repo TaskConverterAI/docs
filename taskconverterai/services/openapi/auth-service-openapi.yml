@@ -223,6 +223,7 @@ paths:
                 $ref: '#/components/schemas/GroupMember'
         '404':
           description: User not found
+  /groups/{groupId}:
     delete:
       summary: Delete group (owner only)
       tags:
