@@ -504,6 +504,9 @@ components:
         priority:
           type: string
           description: Task priority (LOW, MIDDLE, HIGH). If not provided, default value MIDDLE
+        status:
+          type: string
+          description: Status of task (DONE, UNDONE)
         groupId:
           type: integer
           description: Optional group identifier (if not provided, task is personal)
