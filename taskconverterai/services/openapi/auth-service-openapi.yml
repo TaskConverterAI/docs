@@ -202,6 +202,26 @@ paths:
           description: Group not found
         '401':
           description: Not authenticated
+    delete:
+      summary: Delete group (owner only)
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Group identifier
+      responses:
+        '204':
+          description: Group deleted successfully
+        '403':
+          description: Access denied - not group owner
+        '404':
+          description: Group not found
+        '401':
+          description: Not authenticated
   /groups/members/{memberId}:
     get:
       summary: Get user information information
@@ -223,27 +243,6 @@ paths:
                 $ref: '#/components/schemas/GroupMember'
         '404':
           description: User not found
-  /groups/{groupId}:
-    delete:
-      summary: Delete group (owner only)
-      tags:
-        - Groups
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: Group identifier
-      responses:
-        '204':
-          description: Group deleted successfully
-        '403':
-          description: Access denied - not group owner
-        '404':
-          description: Group not found
-        '401':
-          description: Not authenticated
   /groups/{groupId}/members:
     post:
       summary: Add member to group
