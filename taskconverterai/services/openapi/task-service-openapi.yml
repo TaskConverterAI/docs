@@ -246,8 +246,8 @@ paths:
       requestBody:
         required: false
       responses:
-        '200':
-          description: Comment added successfully
+        '204':
+          description: Comment deleted successfully
           content:
             application/json:
               schema:
